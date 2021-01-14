@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.views.generic import (ListView, 
                                 DetailView, 
                                 CreateView,
@@ -8,6 +8,7 @@ from django.http import HttpResponse
 from django.contrib.auth.mixins import (LoginRequiredMixin,
                                         UserPassesTestMixin)
 from .models import Post
+from django.contrib.auth.models import User
 
 # Create your views here.
 
@@ -46,8 +47,19 @@ class PostListView(ListView):
     template_name = 'blog/home.html' #---<app>/<model>_<viewtype>.html
     context_object_name = 'posts'
     ordering = ['-date_posted']
-    paginate_by = 4
+    paginate_by = 2
 
+
+class UserPostListView(ListView):
+    model = Post
+    template_name = 'blog/user_posts.html' #---This will still show all posts
+    context_object_name = 'posts'         #---What needs tp be done is to filter the posts for a specific user.
+    ordering = ['-date_posted']
+    paginate_by = 2
+
+    def get_queryset(self) :
+        user = get_object_or_404(User, username=self.kwargs.get('username'))#Gets the username pasted into the url
+        return Post.objects.filter(author=user).order_by('-date_posted')#filters the posts by that user and sorts them according to time
 class PostDetailView(DetailView):
     model = Post #Shows the details of the post
 
